@@ -18,7 +18,8 @@ import { useCategories,useTransactions } from '../composables/useAccounting'
       description: '',
       date: new Date().toISOString().split('T')[0]
     })
-    
+
+
     const isEdit = computed(() => !!props.editData)
     
     const filteredCategories = computed(() => {
@@ -56,6 +57,7 @@ import { useCategories,useTransactions } from '../composables/useAccounting'
         }
       }
     }
+    
     </script>
     
     <template>

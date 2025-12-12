@@ -19,18 +19,30 @@ interface Overview {
   balance: number
 }
 
+
 export const useFormatMoney = () => {
-    const formatMoney = (amount: number) => {
-      return new Intl.NumberFormat('zh-TW', {
-        style: 'currency',
-        currency: 'TWD',
-        minimumFractionDigits: 0
-      }).format(amount)
-    }
-    return { formatMoney }
+  const formatMoney = (amount: number) => {
+    return new Intl.NumberFormat('zh-TW', {
+      style: 'currency',
+      currency: 'TWD',
+      minimumFractionDigits: 0
+    }).format(amount)
   }
 
-  // 交易相關
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr)
+    return date.toLocaleDateString('zh-TW', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    })
+  }
+
+  return { formatMoney, formatDate }
+}
+
+
+
   export const useTransactions = () => {
     const transactions = ref<any[]>([])
     const overview = ref<Overview>({ totalIncome: 0, totalExpense: 0, balance: 0 })
@@ -104,7 +116,6 @@ export const useFormatMoney = () => {
     }
   }
   
-  // 分類相關
   export const useCategories = () => {
     const categories = ref<Category[]>([])
     const loading = ref(false)
