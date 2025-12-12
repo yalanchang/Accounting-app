@@ -46,3 +46,6 @@ INSERT INTO transactions (amount, category_id, description, date) VALUES
 (1500, 4, '公車卡', '2025-12-02'),
 (3000, 5, '電影', '2025-12-03'),
 (1000, 2, '股票分紅', '2025-12-04');
+
+ALTER TABLE transactions 
+ADD COLUMN type VARCHAR(20) NOT NULL AFTER id;

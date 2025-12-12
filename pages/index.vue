@@ -6,6 +6,8 @@ const { fetchCategories } = useCategories()
 const { formatMoney } = useFormatMoney()
 
 const showForm = ref(false)
+const showAll = ref(false)  
+
 
 onMounted(async () => {
   await fetchCategories()
@@ -13,161 +15,105 @@ onMounted(async () => {
   await fetchOverview()
 })
 
-const handleAdded = () => {
+const handleAdded = async () => {
   showForm.value = false
+  await fetchTransactions() 
+  await fetchOverview()      
 }
+
+const displayedTransactions = computed(() => {
+  return showAll.value ? transactions.value : transactions.value.slice(0, 5)
+})
 </script>
 
 <template>
-  <div class="home">
-    <h1>我的記帳本</h1>
+  <div class="p-4">
+    <h1 class="text-center text-gray-800 text-2xl font-bold mb-8">我的記帳本</h1>
     
-    <div class="overview-cards">
-      <div class="card income">
-        <div class="card-icon">📈</div>
-        <div class="card-content">
-          <div class="card-label">總收入</div>
-          <div class="card-value">{{ formatMoney(overview.totalIncome) }}</div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      <div class="bg-white rounded-2xl p-6 flex items-center gap-4 shadow-md">
+        <div class="text-4xl">📈</div>
+        <div>
+          <div class="text-gray-500 text-sm">總收入</div>
+          <div class="text-xl font-bold text-green-500">{{ formatMoney(overview.totalIncome) }}</div>
         </div>
       </div>
       
-      <div class="card expense">
-        <div class="card-icon">📉</div>
-        <div class="card-content">
-          <div class="card-label">總支出</div>
-          <div class="card-value">{{ formatMoney(overview.totalExpense) }}</div>
+      <div class="bg-white rounded-2xl p-6 flex items-center gap-4 shadow-md">
+        <div class="text-4xl">📉</div>
+        <div>
+          <div class="text-gray-500 text-sm">總支出</div>
+          <div class="text-xl font-bold text-red-500">{{ formatMoney(overview.totalExpense) }}</div>
         </div>
       </div>
       
-      <div class="card balance">
-        <div class="card-icon">💵</div>
-        <div class="card-content">
-          <div class="card-label">結餘</div>
-          <div class="card-value" :class="{ negative: overview.balance < 0 }">
+      <div class="bg-white rounded-2xl p-6 flex items-center gap-4 shadow-md">
+        <div class="text-4xl">💵</div>
+        <div>
+          <div class="text-gray-500 text-sm">結餘</div>
+          <div 
+            class="text-xl font-bold"
+            :class="overview.balance < 0 ? 'text-red-500' : 'text-blue-500'"
+          >
             {{ formatMoney(overview.balance) }}
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 快速記帳 -->
-    <div class="quick-add">
-      <button class="add-btn" @click="showForm = !showForm">
+    <!-- 快速記帳按鈕 -->
+    <div class="text-center mb-8">
+      <button 
+        class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-8 py-4 text-lg rounded-xl hover:opacity-90 transition"
+        @click="showForm = !showForm"
+      >
         {{ showForm ? '✕ 關閉' : '＋ 快速記帳' }}
       </button>
     </div>
 
     <TransactionForm v-if="showForm" @added="handleAdded" />
 
-    <!-- 最近記錄 -->
-    <div class="recent-transactions">
-      <h2>最近記錄</h2>
-      <div v-if="loading" class="loading">載入中...</div>
-      <div v-else-if="transactions.length === 0" class="empty">
+    <div class="bg-white rounded-2xl p-6 shadow-md">
+      <h2 class="text-gray-800 font-bold text-xl mb-4">最近記錄</h2>
+      
+      <div v-if="loading" class="text-center py-8 text-gray-500">載入中...</div>
+      
+      <div v-else-if="transactions.length === 0" class="text-center py-8 text-gray-500">
         還沒有任何記錄，開始記帳吧！
       </div>
-      <div v-else class="transaction-list">
-        <div 
-          v-for="t in transactions.slice(0, 5)" 
-          :key="t.id" 
-          class="transaction-item"
-        >
-          <div class="transaction-icon">{{ t.category_icon || '📁' }}</div>
-          <div class="transaction-info">
-            <div class="transaction-category">{{ t.category_name }}</div>
-            <div class="transaction-desc">{{ t.description || '無備註' }}</div>
-          </div>
-          <div class="transaction-right">
-            <div class="transaction-amount" :class="t.type">
-              {{ t.type === 'income' ? '+' : '-' }}{{ formatMoney(t.amount) }}
+      
+      <template v-else>
+        <div class="flex flex-col gap-3">
+          <div 
+            v-for="t in displayedTransactions" 
+            :key="t.id" 
+            class="flex items-center gap-4 p-4 bg-gray-50 rounded-xl"
+          >
+            <div class="text-2xl">{{ t.category_icon || '📁' }}</div>
+            <div class="flex-1">
+              <div class="font-medium text-gray-800">{{ t.category_name }}</div>
+              <div class="text-sm text-gray-500">{{ t.description || '無備註' }}</div>
             </div>
-            <div class="transaction-date">{{ t.date }}</div>
+            <div class="text-right">
+              <div 
+                class="font-bold text-lg"
+                :class="t.type === 'income' ? 'text-green-500' : 'text-red-500'"
+              >
+                {{ t.type === 'income' ? '+' : '-' }}{{ formatMoney(t.amount) }}
+              </div>
+              <div class="text-xs text-gray-400">{{ t.date }}</div>
+            </div>
           </div>
         </div>
-      </div>
+
+        <button 
+          v-if="transactions.length > 5" 
+          class="w-full mt-4 py-3 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-600 text-sm transition"
+          @click="showAll = !showAll"
+        >
+          {{ showAll ? '收起 ▲' : `展開全部 (${transactions.length} 筆) ▼` }}
+        </button>
+      </template>
     </div>
   </div>
 </template>
-
-<style scoped>
-.home h1 {
-  text-align: center;
-  color: #333;
-  margin-bottom: 2rem;
-}
-
-.overview-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-}
-
-.card {
-  background: white;
-  border-radius: 16px;
-  padding: 1.5rem;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-}
-
-.card-icon { font-size: 2.5rem; }
-.card-label { color: #666; font-size: 0.9rem; }
-.card-value { font-size: 1.5rem; font-weight: bold; }
-.card.income .card-value { color: #22c55e; }
-.card.expense .card-value { color: #ef4444; }
-.card.balance .card-value { color: #3b82f6; }
-.card-value.negative { color: #ef4444 !important; }
-
-.quick-add {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.add-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  padding: 1rem 2rem;
-  font-size: 1.1rem;
-  border-radius: 12px;
-  cursor: pointer;
-}
-
-.recent-transactions {
-  background: white;
-  border-radius: 16px;
-  padding: 1.5rem;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-}
-
-.recent-transactions h2 { margin-bottom: 1rem; color: #333; }
-.loading, .empty { text-align: center; padding: 2rem; color: #666; }
-
-.transaction-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.transaction-item {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1rem;
-  background: #f9fafb;
-  border-radius: 12px;
-}
-
-.transaction-icon { font-size: 1.5rem; }
-.transaction-info { flex: 1; }
-.transaction-category { font-weight: 500; color: #333; }
-.transaction-desc { font-size: 0.85rem; color: #666; }
-.transaction-right { text-align: right; }
-.transaction-amount { font-weight: bold; font-size: 1.1rem; }
-.transaction-amount.income { color: #22c55e; }
-.transaction-amount.expense { color: #ef4444; }
-.transaction-date { font-size: 0.8rem; color: #999; }
-</style>

@@ -17,6 +17,7 @@ export default defineEventHandler(async (event) => {
   
       return { id: result.insertId, message: '新增成功' }
     } catch (error) {
+      console.error('DB Error:', error)
       throw createError({ statusCode: 500, message: '新增交易記錄失敗' })
     }
   })

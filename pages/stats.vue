@@ -16,17 +16,17 @@
     const monthLabels = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
     
     const fetchData = async () => {
-      loading.value = true
-      try {
-        overview.value = await $fetch<Overview>('/api/stats/overview')
-        monthlyData.value = await $fetch(`/api/stats/monthly?year=${selectedYear.value}`)
-        categoryData.value = await $fetch('/api/stats/by-category?type=expense')
-      } catch (error) {
-        console.error('取得統計失敗:', error)
-      } finally {
-        loading.value = false
-      }
-    }
+  loading.value = true
+  try {
+    overview.value = await $fetch<Overview>('/api/stats/overview')
+    monthlyData.value = await $fetch<any[]>(`/api/stats/monthly?year=${selectedYear.value}`)
+    categoryData.value = await $fetch<any[]>('/api/stats/by-category?type=expense')
+  } catch (error) {
+    console.error('取得統計失敗:', error)
+  } finally {
+    loading.value = false
+  }
+}
     
     onMounted(fetchData)
     
@@ -45,7 +45,6 @@
       <div class="stats-page">
         <h1>📊 統計分析</h1>
     
-        <!-- 總覽 -->
         <div class="overview-cards">
           <div class="card income">
             <div class="card-label">總收入</div>
@@ -66,7 +65,6 @@
         <div v-if="loading" class="loading">載入中...</div>
     
         <template v-else>
-          <!-- 月度趨勢（簡易長條圖） -->
           <div class="chart-section">
             <div class="chart-header">
               <h2>📈 月度趨勢</h2>
